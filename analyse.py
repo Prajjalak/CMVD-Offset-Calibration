@@ -10,23 +10,29 @@ def fileopen(filename):
     print("####################")
     print("Input file: ",filename)
 
-    temp = np.loadtxt(filename,delimiter=',',usecols=2,skiprows=1) #load the contents in a temporary variable
-    return temp
+    col2,col4 = np.loadtxt(filename,delimiter=',',usecols=(2,4),skiprows=1,unpack=True) #load the contents in a temporary variable
+    return col2,col4
 
 #### Analysis function ####
-def analyse(matrix,dsize):
+def analyse(matrix,vmatrix,dsize):
     av = np.mean(matrix,axis=0) # calculating mean
     sd = np.std(matrix,axis=0)  # calculating standard deviation
+    vav = np.mean(vmatrix,axis=0)
+    vsd = np.std(vmatrix,axis=0)
 
     try:
         with open('calibration_data.csv','w') as fout:      # writing mean and s.d. values in a file named 'calibration_data.csv'
-            fout.write("Cell no.,Mean Offset,Offset S.D.\n")
+            fout.write("Cell no.,Mean Offset,Offset S.D.,Mean Offset (V),Offset S.D. (V)\n")
             for i in range (dsize):
                 fout.write(str(i))
                 fout.write(",")
                 fout.write(str(av[i]))
                 fout.write(",")
                 fout.write(str(sd[i]))
+                fout.write(",")
+                fout.write(str(vav[i]))
+                fout.write(",")
+                fout.write(str(vsd[i]))
                 fout.write("\n")
             print("####################")
             print("Output file written successfully")
@@ -99,16 +105,19 @@ if sys.argv[1] == '-a' or sys.argv[1] == '--all':
     print("Opening all files...")
     for fin in os.listdir(path):
         if fin.endswith('.csv'): # check if file is csv
-            data = fileopen(fin)
+            data,vdata = fileopen(fin)
             try:
                 array = np.concatenate((array,data),axis=None) # if variable 'array' exists, append the temporary variable to it
+                varray = np.concatenate((varray,vdata),axis=None)
             except NameError:
                 array = data # if 'array' doesn't exist (NameError), create it
+                varray = vdata
             datasize = data.size # get the data size (assuming same data size for all files)
             counter += 1
 
     offset = np.reshape(array, (counter, datasize)) # creating the voltage matrix, which is a MxN matrix, M= no. of data files, N= data size
-    analyse(offset,datasize)
+    voffset = np.reshape(varray, (counter, datasize))
+    analyse(offset,voffset,datasize)
 
 
 elif sys.argv[1] == '-f' or sys.argv[1] == '--file':
@@ -119,17 +128,19 @@ elif sys.argv[1] == '-f' or sys.argv[1] == '--file':
     for i in range(2, n):
         fin = sys.argv[i] # Take file name as input argument
         if fin.endswith('.csv'): # check if file is binary
-            data = fileopen(fin)
+            data,vdata = fileopen(fin)
             try:
                 array = np.concatenate((array,data),axis=None) # if variable 'array' exists, append the temporary variable to it
+                varray = np.concatenate((varray,vdata),axis=None)
             except NameError:
                 array = data # if 'array' doesn't exist (NameError), create it
+                varray = vdata
             datasize = data.size # get the data size (assuming same data size for all files)
             counter += 1
 
     offset = np.reshape(array, (counter, datasize)) # creating the voltage matrix, which is a MxN matrix, M= no. of data files, N= data size
-    analyse(offset,datasize)
-
+    voffset = np.reshape(varray, (counter, datasize))
+    analyse(offset,voffset,datasize)
 
 
 else:

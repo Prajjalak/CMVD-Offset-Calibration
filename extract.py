@@ -5,6 +5,9 @@ import sys
 import os
 import matplotlib.pyplot as plt
 
+#### Array search function ####
+get_indexes = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if x == y]
+
 #### Extraction function ####
 def extract(data):
     calib_data = []
@@ -14,8 +17,7 @@ def extract(data):
 
         daq_id = data[3] # Extracting metadata
         evt_cnt = (data[5] << 16) + data[4]
-        vcal16 = int(data[6],16)
-        vcal16 = int(0) # Temporary for testing purpose
+        vcal16 = data[6]
         vcal = vcal16 >> 2
         volt_vcal = vcal16/26214
         payload_size = (data[23] << 16) + data[22]
@@ -25,7 +27,7 @@ def extract(data):
         print("Data payload size: ",payload_size)
         print("Calibration voltage: ",volt_vcal)
 
-        volt_data = ((data*2)/16383)-1 # Actual voltage value from the raw ADC reading
+        volt_data = ((data*2)/16383) # Actual voltage value from the raw ADC reading
 
         #Exporting extracted data to a CSV file named 'calibration_vcal=*.csv', * is VCAL value
         try:
@@ -53,6 +55,14 @@ def extract(data):
     else:
         print("Data packet error")
         exit()
+
+#### Splitting function ####
+def split(data):
+    end_markers = get_indexes(0xD6D6,bindata)
+    count = len(end_markers)
+    output = np.array_split(data,count)
+    return output, count
+
 #### File opening function ####
 def fileopen(filename):
     print("####################")
@@ -80,7 +90,9 @@ if sys.argv[1] == '-a' or sys.argv[1] == '--all':
     for fin in os.listdir(path):
         if fin.endswith('.bin'): # check if file is binary
             bindata = fileopen(fin)
-            extract(bindata)
+            packet,count = split(bindata)
+            for i in range(count):
+                extract(packet[i])
 
 
 elif sys.argv[1] == '-f' or sys.argv[1] == '--file':
@@ -88,7 +100,9 @@ elif sys.argv[1] == '-f' or sys.argv[1] == '--file':
     for i in range(2, n):
         fin = sys.argv[i] # Take file name as input argument
         bindata = fileopen(fin)
-        extract(bindata)
+        packet,count = split(bindata)
+        for i in range(count):
+            extract(packet[i])
 
 else:
     print("Wrong arguement")
