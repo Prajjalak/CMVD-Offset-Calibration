@@ -1,14 +1,16 @@
 # CMVD-Offset-Calibration
 Code for CMVD DDB board's DRS chip cell wise offset calibration
 ####################
-DRS Offset Calibration Code
+# DRS Offset Calibration Code
 Author: Prajjalak C
 Language: Python 3
 
-To run all:
+# To run all:
+
             ./runall.sh
 
-To run individual codes:
+# To run individual codes:
+
     1. extract.py: Extracts binary data from *.bin files and puts into *.csv files
         Arguements:
             -a, --all: considers all *.bin files in the current working directory
@@ -36,5 +38,7 @@ To run individual codes:
                     OR
             python3 plot.py -f file1.csv file2.csv file3.csv
 
-Final output: 1. 'calibration_data.csv' which contains mean and standard deviation data of offset values for each individual DRS cells.
+# Final output: 
+
+              1. 'calibration_data.csv' which contains mean and standard deviation data of offset values for each individual DRS cells.
               2. graphs
